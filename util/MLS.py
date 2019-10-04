@@ -4,6 +4,7 @@
 
 import cv2
 import sys
+import math
 import numpy as np
 
 def read_points(filename):
@@ -24,22 +25,20 @@ class MLS():
         rows, cols = z.shape
         if len(x) != cols or len(y) != rows:
             print('length of x and y arrays must match z shape')
-            import sys
             sys.exit()
 
         if len(xi) != len(yi):
             print('Length of xi and yi should match')
-            import sys
             sys.exit()
 
         data = np.zeros((xi.shape[0], yi.shape[0]))
         for i in range(z.shape[0]):
-            xp = np.array(range(0, xi[i, -1], int(xi[i, -1] / (x.shape[0] - 1) + .5))) if sys.version_info < (3, 0) else np.array(range(0, xi[i, -1], int(xi[i, -1] / (x.shape[0] - 1) - .5)))
+            xp = np.array(range(0, xi[i, -1], math.floor(xi[i, -1] / (x.shape[0] - 1))))
             fp = z[i, :]
             data[xp[i]] = np.interp(xi[i, :], xp, fp)
 
         for i in range(yi.shape[1]):
-            xp = range(0, yi[-1, i], int(yi[-1, i] / (y.shape[1] - 1) + .5)) if sys.version_info < (3, 0) else range(0, yi[-1, i], int(yi[-1, i] / (y.shape[1] - 1) - .5))
+            xp = range(0, yi[-1, i], math.floor(yi[-1, i] / (y.shape[1] - 1)))
             fp = [data[row_index][i] for row_index in xp]
             data[:, i] = np.interp(yi[:, 1], xp, fp)
         return data.T
@@ -182,3 +181,7 @@ class MLS():
         cv2.imwrite('%s/warp_AtoM.png' % root_folder, warp_AtoM)
         np.save('%s/BtoA.npy' % root_folder, vxy_BtoA)
         cv2.imwrite('%s/warp_BtoM.png' % root_folder, warp_BtoM)
+
+# Run mls independently with the results from previous steps
+# mls = MLS()
+# mls.run_MLS_in_folder('../../results/lion_cat')
